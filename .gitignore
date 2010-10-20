@@ -1,5 +1,5 @@
-/Source/*/obj
-/Source/*/bin
+/src/*/obj
+/src/*/bin
 _ReSharper.*
 *.csproj.user
 *.[Rr]e[Ss]harper.user
