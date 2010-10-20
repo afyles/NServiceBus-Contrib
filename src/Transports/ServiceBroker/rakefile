@@ -1,0 +1,33 @@
+require 'albacore'
+require 'FileUtils'
+
+#Todo: Send compile target from outer rakefile
+COMPILE_TARGET = "debug"
+BUILD_DIR = "build/"
+
+task :default => ['build']
+ 
+desc "Prepares the working directory for a new build"
+task :clean do
+    FileUtils.rm_rf BUILD_DIR
+	Dir.mkdir BUILD_DIR
+end 
+
+desc "Compile the project"
+msbuild :compile do |msb|
+	msb.properties :configuration => COMPILE_TARGET
+	msb.targets :Clean, :Build
+	msb.solution = "ServiceBroker.sln"
+	msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
+end
+
+task :build => [:clean, :compile] do  
+	copyOutputFiles "NServiceBus.Unicast.Transport.ServiceBroker/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}","#{BUILD_DIR}"
+end 
+
+def copyOutputFiles(fromDir, filePattern, outDir)
+  mkdir outDir unless File.exists? outDir
+  Dir.glob(File.join(fromDir, filePattern)){|file| 		
+	copy(file, outDir) if File.file?(file)
+  } 
+end

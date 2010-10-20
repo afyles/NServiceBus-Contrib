@@ -8,4 +8,4 @@ _ReSharper.*
 *.cache
 *~
 *.swp
-/Build
+[Bb]uild
