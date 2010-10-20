@@ -1,7 +1,7 @@
 require 'albacore'
 require 'FileUtils'
 
-BUILD_DIR = "build/"
+BUILD_DIR = "build"
 DIST_DIR = "dist"
 COMPILE_TARGET = "debug"
 BUILD_NUMBER_BASE = "0.1.0"
@@ -11,7 +11,7 @@ COPYRIGHT = 'Copyright 2010 Udi Dahan, Andreas Ohlund, Matt Burton, et al. All r
 COMMON_ASSEMBLY_INFO = 'src/CommonAssemblyInfo.cs';
 
 #TODO: Change this
-task :default => ['version']
+task :default => ['version', 'build_all_projects', 'build']
 
 def get_version
   ENV['BUILD_NUMBER'] || '1.0.0.0'
@@ -43,6 +43,10 @@ desc "Update the version information for the build"
   asm.custom_attributes :AssemblyInformationalVersion => asm_version
   asm.copyright = COPYRIGHT
   asm.output_file = COMMON_ASSEMBLY_INFO
+end
+
+task :build_all_projects do
+	Dir['src/**/rakefile'].each {|file| load(file)}
 end
 
 namespace :package do
