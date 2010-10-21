@@ -4,8 +4,10 @@ require 'FileUtils'
 COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
 BUILD_DIR = "build" unless defined?(BUILD_DIR)
 
-SOLUTION_FILE = "ServiceBroker.sln"
-PROJECT_DIRECTORY = "NServiceBus.Unicast.Transport.ServiceBroker"
+# Change these two to match your solution and project
+SOLUTION_FILE = "SolutionFile.sln"
+PROJECT_DIRECTORY = "ProjectRootDirectory"
+
 
 task :default => ['build']
  
