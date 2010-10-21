@@ -29,11 +29,11 @@ namespace NServiceBus
                         MessageType = messageType
                     };
 
-                    if (session.Query<Subscription>()
-                        .Where(x => x.MessageType == subscription.MessageType && x.SubscriberEndpoint == subscription.SubscriberEndpoint)
-                        .Count() == 0)
+                    if (session.Query<Subscription>().Where(x => x.MessageType == subscription.MessageType && x.SubscriberEndpoint == subscription.SubscriberEndpoint).Count() == 0)
                         session.Store(subscription);
-                }                               
+                }         
+            
+                session.SaveChanges();      
                 tx.Complete();
             }
         }
@@ -47,9 +47,11 @@ namespace NServiceBus
                 {
                     var messageType = mt;
                     session.Query<Subscription>()
-                        .Where(x => x.SubscriberEndpoint == client && x.MessageType == messageType)
-                        .ToList().ForEach(session.Delete);
+                        .Where(x => x.SubscriberEndpoint == client && x.MessageType == messageType).ToList()
+                        .ForEach(session.Delete);
                 }
+                
+                session.SaveChanges();
                 tx.Complete();
             }                        
         }
@@ -57,6 +59,7 @@ namespace NServiceBus
         public IList<string> GetSubscribersForMessage(IList<string> messageTypes)
         {
             var subscribers = new List<string>();
+
             using (var session = _documentStore.OpenSession())            
             using (var tx = new TransactionScope(TransactionScopeOption.RequiresNew, new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted }))
             {
@@ -65,13 +68,14 @@ namespace NServiceBus
                     var messageType = mt;
                     var subs = session.Query<Subscription>()
                         .Where(x => x.MessageType == messageType)
-                        .Select(x => x.SubscriberEndpoint);
-
-                    subscribers.AddRange(subs);
+                        .ToList();
+                                                                
+                    subscribers.AddRange(subs.Select(x => x.SubscriberEndpoint));
                 }
 
                 tx.Complete();
             }
+            
             return subscribers;                            
         }
 
