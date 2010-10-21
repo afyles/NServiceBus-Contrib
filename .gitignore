@@ -9,4 +9,5 @@ _ReSharper.*
 *~
 *.swp
 [Bb]uild
+[Dd]ist
 src/CommonAssemblyInfo.cs

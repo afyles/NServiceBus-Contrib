@@ -1,21 +1,27 @@
 require 'albacore'
 require 'FileUtils'
 
-BUILD_DIR = "build"
 DIST_DIR = "dist"
 COMPILE_TARGET = "debug"
 BUILD_NUMBER_BASE = "0.1.0"
 PRODUCT = "NServiceBus-Contrib"
 
+GLOBAL_BUILD_DIR = "build"
+
 COPYRIGHT = 'Copyright 2010 Udi Dahan, Andreas Ohlund, Matt Burton, et al. All rights reserved.';
 COMMON_ASSEMBLY_INFO = 'src/CommonAssemblyInfo.cs';
 
-#TODO: Change this
-task :default => ['version', 'build_all_projects', 'build']
+task :default => ['version', 'build_all_projects', 'build', 'package:all']
 
 def get_version
   ENV['BUILD_NUMBER'] || '1.0.0.0'
 end
+
+desc "Prepares the working directory for a new build"
+task :clean_root do
+    FileUtils.rm_rf GLOBAL_BUILD_DIR
+	Dir.mkdir GLOBAL_BUILD_DIR
+end 
   
 desc "Update the version information for the build"
   assemblyinfo :version do |asm|
@@ -45,7 +51,7 @@ desc "Update the version information for the build"
   asm.output_file = COMMON_ASSEMBLY_INFO
 end
 
-task :build_all_projects do
+task :build_all_projects => [:clean_root] do
 	Dir['src/**/rakefile'].each {|file| load(file)}
 end
 
@@ -55,11 +61,11 @@ namespace :package do
   end
 
   desc 'Create zip of binaries'
-  zip :temp => :prepare_dist_directory do |zip|
-    zip.directories_to_zip = ['build/ChangeMe']
-    zip.output_file = "ChangeMe.#{get_version}.zip"
+  zip :contrib => :prepare_dist_directory do |zip|
+    zip.directories_to_zip = ['build']
+    zip.output_file = "NServiceBus-Contrib.#{get_version}.zip"
     zip.output_path = DIST_DIR
   end
   
-  #task :all => [:temp]
+  task :all => [:contrib]
 end

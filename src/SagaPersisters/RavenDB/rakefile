@@ -5,9 +5,8 @@ COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
 
 build_dir = "#{File.dirname(__FILE__)}/build"
 
-# Change these two to match your solution and project
-solution_file = "SolutionFile.sln"
-project_directory = "ProjectRootDirectory"
+solution_file = "NServiceBus.SagaPersisters.RavenDB.sln"
+project_directory = "NServiceBus.SagaPersisters.RavenDB"
 
 task :default => ['build']
  

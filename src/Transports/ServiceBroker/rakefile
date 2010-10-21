@@ -2,29 +2,38 @@ require 'albacore'
 require 'FileUtils'
 
 COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
-BUILD_DIR = "build" unless defined?(BUILD_DIR)
 
-SOLUTION_FILE = "ServiceBroker.sln"
-PROJECT_DIRECTORY = "NServiceBus.Unicast.Transport.ServiceBroker"
+build_dir = "#{File.dirname(__FILE__)}/build"
+
+solution_file = "ServiceBroker.sln"
+project_directory = "NServiceBus.Unicast.Transport.ServiceBroker"
 
 task :default => ['build']
  
 desc "Prepares the working directory for a new build"
 task :clean do
-    FileUtils.rm_rf BUILD_DIR
-	Dir.mkdir BUILD_DIR
+	unless defined?(GLOBAL_BUILD_DIR) then
+		FileUtils.rm_rf build_dir
+		Dir.mkdir build_dir
+	end
 end 
 
 desc "Compile the project"
 msbuild :compile do |msb|
 	msb.properties :configuration => COMPILE_TARGET
 	msb.targets :Clean, :Build
-	msb.solution = File.dirname(__FILE__) + "/#{SOLUTION_FILE}" 
+	msb.solution = File.dirname(__FILE__) + "/#{solution_file}" 
 	msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
 end
 
 task :build => [:clean, :compile] do  
-	copyOutputFiles File.dirname(__FILE__)+ "/#{PROJECT_DIRECTORY}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", File.dirname(__FILE__) + "/#{BUILD_DIR}"
+
+	if defined?(GLOBAL_BUILD_DIR) then
+		copyOutputFiles File.dirname(__FILE__)+ "/#{project_directory}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", "#{GLOBAL_BUILD_DIR}/#{project_directory}"
+	else
+		copyOutputFiles File.dirname(__FILE__)+ "/#{project_directory}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", build_dir
+	end
+	
 end 
 
 def copyOutputFiles(fromDir, filePattern, outDir)

@@ -5,12 +5,15 @@
 To build the NServiceBus Contrib you need to have Ruby installed. You can get the latest Ruby Installer from [http://rubyinstaller.org](http://rubyinstaller.org/)
 
 You'll also need the Albacore gem to run the rakefiles
-
-<code>gem install albacore</code>
+<pre>
+	<code>
+		gem install albacore
+	</code>
+</pre>
 
 ## Template rakefile for projects
 
-The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it can find in the subdirectories and executes the 'build' task. For the moment, put the _rakefiletemplate in the same folder as your .sln-file and rename it rakefile.
+The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it can find in the subdirectories and executes the 'build' task. For the moment, put the _rakefiletemplate in the same folder as your .sln-file and rename it "rakefile".
 
 <pre>
 	<code>
@@ -18,30 +21,38 @@ The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it
 	require 'FileUtils'
 
 	COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
-	BUILD_DIR = "build" unless defined?(BUILD_DIR)
+
+	build_dir = "#{File.dirname(__FILE__)}/build"
 
 	# Change these two to match your solution and project
-	SOLUTION_FILE = "SolutionFile.sln"
-	PROJECT_DIRECTORY = "ProjectRootDirectory"
+	solution_file = "SolutionFile.sln"
+	project_directory = "ProjectRootDirectory"
 
 	task :default => ['build']
 	 
 	desc "Prepares the working directory for a new build"
 	task :clean do
-		FileUtils.rm_rf BUILD_DIR
-		Dir.mkdir BUILD_DIR
+		unless defined?(GLOBAL_BUILD_DIR) then
+			FileUtils.rm_rf build_dir
+			Dir.mkdir build_dir
+		end
 	end 
 
 	desc "Compile the project"
 	msbuild :compile do |msb|
 		msb.properties :configuration => COMPILE_TARGET
 		msb.targets :Clean, :Build
-		msb.solution = File.dirname(__FILE__) + "/#{SOLUTION_FILE}" 
+		msb.solution = File.dirname(__FILE__) + "/#{solution_file}" 
 		msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
 	end
 
 	task :build => [:clean, :compile] do  
-		copyOutputFiles File.dirname(__FILE__)+ "/#{PROJECT_DIRECTORY}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", File.dirname(__FILE__) + "/#{BUILD_DIR}"
+		
+		if defined?(GLOBAL_BUILD_DIR) then
+			copyOutputFiles File.dirname(__FILE__)+ "/#{project_directory}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", "#{GLOBAL_BUILD_DIR}/#{project_directory}"
+		else
+			copyOutputFiles File.dirname(__FILE__)+ "/#{project_directory}/bin/#{COMPILE_TARGET}", "*.{dll,exe,config,pdb}", build_dir
+		end
 	end 
 
 	def copyOutputFiles(fromDir, filePattern, outDir)
