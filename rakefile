@@ -36,7 +36,7 @@ desc "Update the version information for the build"
 
   build_number = "#{BUILD_NUMBER_BASE}." + get_version
 
-  puts "##teamcity[buildNumber '#{build_number}"
+  puts "##teamcity[buildNumber '#{build_number}']"
   asm.trademark = commit
   asm.product_name = "#{PRODUCT} #{gittag}"
   asm.description = build_number
