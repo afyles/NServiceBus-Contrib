@@ -21,6 +21,9 @@ desc "Prepares the working directory for a new build"
 task :clean_root do
     FileUtils.rm_rf GLOBAL_BUILD_DIR
 	Dir.mkdir GLOBAL_BUILD_DIR
+	
+	FileUtils.rm_rf DIST_DIR
+	Dir.mkdir DIST_DIR
 end 
   
 desc "Update the version information for the build"
@@ -59,7 +62,7 @@ namespace :package do
   desc 'Create zip of binaries'
   zip :contrib => :prepare_dist_directory do |zip|
     zip.directories_to_zip = ['build']
-    zip.output_file = "NServiceBus-Contrib.#{get_version}.zip"
+    zip.output_file = "NServiceBus-Contrib.#{BUILD_NUMBER_BASE}.#{get_version}.zip"
     zip.output_path = DIST_DIR
   end
   
