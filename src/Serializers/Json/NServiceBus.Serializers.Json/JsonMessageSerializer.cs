@@ -1,42 +1,30 @@
-using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters;
 using System.Text;
 using Newtonsoft.Json;
-using NServiceBus;
+using NServiceBus.MessageInterfaces;
 using NServiceBus.Serialization;
+using NServiceBus.Serializers.Json.Internal;
 
-namespace InExchange.NServiceBus.Serializers.DoesNotWorkYet
+namespace NServiceBus.Serializers.Json
 {
-  public class MessageContainer
-  {
-    public IMessage[] Messages { get; set; }
-  }
-
-  //public class JsonMessageConverter : JsonConverter
-  //{
-  //  public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-  //  {
-  //  }
-
-  //  public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-  //  {
-  //  }
-
-  //  public override bool CanConvert(Type objectType)
-  //  {
-  //  }
-  //}
-
   public class JsonMessageSerializer : IMessageSerializer
   {
     private readonly JsonSerializerSettings _serializerSettings;
 
-    public JsonMessageSerializer()
+    private readonly IMessageMapper _messageMapper;
+
+    public JsonMessageSerializer(IMessageMapper messageMapper)
     {
-      _serializerSettings = new JsonSerializerSettings();
-      _serializerSettings.TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple;
-      _serializerSettings.TypeNameHandling = TypeNameHandling.Objects;
+      _messageMapper = messageMapper;
+
+      _serializerSettings = new JsonSerializerSettings
+                              {
+                                TypeNameAssemblyFormat = FormatterAssemblyStyle.Simple,
+                                TypeNameHandling = TypeNameHandling.All
+                              };
+
+      _serializerSettings.Converters.Add(new MessageJsonConverter(_messageMapper));
     }
 
     public void Serialize(IMessage[] messages, Stream stream)
@@ -45,12 +33,9 @@ namespace InExchange.NServiceBus.Serializers.DoesNotWorkYet
 
       var streamWriter = new StreamWriter(stream, Encoding.UTF8);
 
-      var jsonWriter = new JsonTextWriter(streamWriter);
-      jsonWriter.Formatting = Formatting.Indented;
-      
-      var container = new MessageContainer() {Messages = messages};
+      var jsonWriter = new JsonTextWriter(streamWriter) { Formatting = Formatting.Indented };
 
-      jsonSerializer.Serialize(jsonWriter, container);
+      jsonSerializer.Serialize(jsonWriter, messages);
 
       jsonWriter.Flush();
       streamWriter.Flush();
@@ -64,9 +49,9 @@ namespace InExchange.NServiceBus.Serializers.DoesNotWorkYet
 
       using (var reader = new JsonTextReader(streamReader))
       {
-        var container = jsonSerializer.Deserialize<MessageContainer>(reader);
+        var messages = jsonSerializer.Deserialize<IMessage[]>(reader);
 
-        return container.Messages;
+        return messages;
       }
     }
   }
