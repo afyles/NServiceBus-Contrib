@@ -17,11 +17,18 @@ namespace NServiceBus.Serializers.Json.Internal
     public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
       var mappedType = _messageMapper.GetMappedTypeFor(value.GetType());
+      string typeName = GetTypeName(mappedType);
 
       var jobj = JObject.FromObject(value);
-      jobj.AddFirst(new JProperty("$type", mappedType.AssemblyQualifiedName));
+
+      jobj.AddFirst(new JProperty("$type", typeName));
 
       jobj.WriteTo(writer);
+    }
+
+    private string GetTypeName(Type mappedType)
+    {
+      return string.Format("{0}, {1}", mappedType.FullName, mappedType.Assembly.GetName().Name);
     }
 
     public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
