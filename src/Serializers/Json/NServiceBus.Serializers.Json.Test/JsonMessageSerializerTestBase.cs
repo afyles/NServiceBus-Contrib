@@ -13,6 +13,8 @@ namespace NServiceBus.Serializers.Json.Test
     public string S;
     public int I { get; set; }
 
+    public DateTime DateTime { get; set; }
+
     public List<int> Ints { get; set; }
     public List<B> Bs { get; set; }
   }
@@ -50,7 +52,8 @@ namespace NServiceBus.Serializers.Json.Test
                     I = 23,
                     S = "Foo",
                     Ints = new List<int> { 12, 42 },
-                    Bs = new List<B> { new B { Bstr = "aaa" }, new B { Bstr = "bbbb" } }
+                    Bs = new List<B> { new B { Bstr = "aaa" }, new B { Bstr = "bbbb" } },
+                    DateTime = new DateTime(2010, 10, 13, 12, 32, 42)
                   };
 
       new Random().NextBytes(obj.Data);
@@ -80,6 +83,7 @@ namespace NServiceBus.Serializers.Json.Test
       Assert.AreEqual(a.Data, obj.Data);
       Assert.AreEqual(23, a.I);
       Assert.AreEqual("Foo", a.S);
+      Assert.AreEqual(new DateTime(2010, 10, 13, 12, 32, 42), a.DateTime);
     }
 
     [Test]
