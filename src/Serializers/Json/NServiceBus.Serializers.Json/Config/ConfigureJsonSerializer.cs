@@ -1,4 +1,5 @@
 using System.Linq;
+using NServiceBus.MessageInterfaces;
 using NServiceBus.MessageInterfaces.MessageMapper.Reflection;
 using NServiceBus.ObjectBuilder;
 
@@ -31,7 +32,7 @@ namespace NServiceBus.Serializers.Json.Config
       var messageMapper = new MessageMapper();
       messageMapper.Initialize(messageTypes);
 
-      config.Configurer.RegisterSingleton<MessageMapper>(messageMapper);
+      config.Configurer.RegisterSingleton<IMessageMapper>(messageMapper);
     }
   }
 }
