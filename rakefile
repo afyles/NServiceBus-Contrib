@@ -1,8 +1,10 @@
+gem 'albacore', '>= 0.2.2'
 require 'albacore'
 require 'FileUtils'
 
 DIST_DIR = "dist"
 COMPILE_TARGET = "debug"
+PLATFORM = "Any CPU"
 BUILD_NUMBER_BASE = "2.5.0"
 PRODUCT = "NServiceBus-Contrib"
 

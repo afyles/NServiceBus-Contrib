@@ -1,10 +1,8 @@
 # NServiceBus Contrib
 
-<em>This readme is a Work in Progress</em>
-
 To build the NServiceBus Contrib you need to have Ruby installed. You can get the latest Ruby Installer from [http://rubyinstaller.org](http://rubyinstaller.org/)
 
-You'll also need the Albacore gem to run the rakefiles
+You'll also need the Albacore gem, at least version 0.2.2, to run the rakefiles
 <pre>
 	<code>
 		gem install albacore
@@ -17,11 +15,13 @@ The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it
 
 <pre>
 	<code>
+	gem 'albacore', '>= 0.2.2'
 	require 'albacore'
 	require 'FileUtils'
 
 	COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
-
+	PLATFORM = "Any CPU" unless defined?(PLATFORM)
+	
 	build_dir = "#{File.dirname(__FILE__)}/build"
 
 	# Change these two to match your solution and project
@@ -40,10 +40,10 @@ The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it
 
 	desc "Compile the project"
 	msbuild :compile do |msb|
-		msb.properties :configuration => COMPILE_TARGET
+		msb.properties :configuration => COMPILE_TARGET, :platform => PLATFORM
 		msb.targets :Clean, :Build
 		msb.solution = File.dirname(__FILE__) + "/#{solution_file}" 
-		msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
+		msb.command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
 	end
 
 	task :build => [:clean, :compile] do  

@@ -1,7 +1,9 @@
+gem 'albacore', '>= 0.2.2'
 require 'albacore'
 require 'FileUtils'
 
 COMPILE_TARGET = "debug" unless defined?(COMPILE_TARGET)
+PLATFORM = "Any CPU" unless defined?(PLATFORM)
 FRAMEWORK_TARGET = "v4.0"
 
 build_dir = "#{File.dirname(__FILE__)}/build"
@@ -28,10 +30,10 @@ msbuild :compile do |msb|
     $framework_target = ENV["FRAMEWORK_TARGET"]
   end
   
-	msb.properties :configuration => COMPILE_TARGET, :TargetFrameworkVersion => $framework_target
+	msb.properties :configuration => COMPILE_TARGET, :platform => PLATFORM, :TargetFrameworkVersion => $framework_target
 	msb.targets :Clean, :Build
 	msb.solution = File.dirname(__FILE__) + "/#{solution_file}" 
-	msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
+	msb.command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
 end
 
 task :build => [:clean, :compile] do  
