@@ -2,7 +2,7 @@
 
 To build the NServiceBus Contrib you need to have Ruby installed. You can get the latest Ruby Installer from [http://rubyinstaller.org](http://rubyinstaller.org/)
 
-You'll also need the Albacore gem, at least version 0.2.2, to run the rakefiles
+You'll also need the Albacore gem, version 0.1.5 (current version 0.2.2 is not yet supported), to run the rakefiles
 <pre>
 	<code>
 		gem install albacore
@@ -15,7 +15,7 @@ The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it
 
 <pre>
 	<code>
-	gem 'albacore', '>= 0.2.2'
+	gem 'albacore', '<= 0.1.5'
 	require 'albacore'
 	require 'FileUtils'
 

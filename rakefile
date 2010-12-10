@@ -1,4 +1,4 @@
-gem 'albacore', '>= 0.2.2'
+gem 'albacore', '<= 0.1.5'
 require 'albacore'
 require 'FileUtils'
 
