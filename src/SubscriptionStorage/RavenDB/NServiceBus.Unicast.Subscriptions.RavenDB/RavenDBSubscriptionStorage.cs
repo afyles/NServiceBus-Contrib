@@ -16,7 +16,7 @@ namespace NServiceBus
             _documentStore = documentStore;
         }
 
-        public void Subscribe(string client, IList<string> messageTypes)
+        public void Subscribe(string client, IEnumerable<string> messageTypes)
         {
             using (var session = _documentStore.OpenSession())
             using (var tx = new TransactionScope())
@@ -38,7 +38,7 @@ namespace NServiceBus
             }
         }
 
-        public void Unsubscribe(string client, IList<string> messageTypes)
+        public void Unsubscribe(string client, IEnumerable<string> messageTypes)
         {
             using (var session = _documentStore.OpenSession())            
             using (var tx = new TransactionScope())
@@ -56,7 +56,7 @@ namespace NServiceBus
             }                        
         }
 
-        public IList<string> GetSubscribersForMessage(IList<string> messageTypes)
+        public IEnumerable<string> GetSubscribersForMessage(IEnumerable<string> messageTypes)
         {
             var subscribers = new List<string>();
 

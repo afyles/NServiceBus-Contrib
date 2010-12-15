@@ -58,7 +58,7 @@
   <ItemGroup>
     <Compile Include="Config\ConfigServiceBrokerTransport.cs" />
     <Compile Include="Config\ConfigureServiceBrokerTransport.cs" />
-    <Compile Include="ServiceBrokerTransport.cs" />
+    <Compile Include="ServiceBrokerMessageReceiver.cs" />
     <Compile Include="Config\ServiceBrokerTransportConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlServiceBrokerTransactionManager.cs" />

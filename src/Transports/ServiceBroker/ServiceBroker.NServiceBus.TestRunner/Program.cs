@@ -7,38 +7,29 @@ using StructureMap;
 namespace TestRunner {
     class Program {
         static void Main(string[] args) {
-            System.Transactions.TransactionManager.DistributedTransactionStarted += new System.Transactions.TransactionStartedEventHandler(TransactionManager_DistributedTransactionStarted);
-            var container = new Container();
-
-            var bus =
-            NServiceBus.Configure.With()
+            System.Transactions.TransactionManager.DistributedTransactionStarted += TransactionManager_DistributedTransactionStarted;
+            
+            
+            var bus = Configure.With()
                 .Log4Net()
-                .StructureMapBuilder(container)
+                .StructureMapBuilder()
                 .XmlSerializer()
                 .UnicastBus()
                     .DoNotAutoSubscribe()
                     .LoadMessageHandlers()
                 .ServiceBrokerTransport()
-                    .ReturnService("ServiceA")
-                    .InputQueue("ServiceAQueue")
                     .ConnectionString(@"Server=.\SQLEXPRESS;Database=ServiceBroker_HelloWorld;Trusted_Connection=True;")
                     .ErrorService("ErrorService")
-                    .MaxRetries(2)
-                    .NumberOfWorkerThreads(2)
-                .CreateBus()
+                      .CreateBus()
                 .Start();
 
             bus.Send("ServiceA", new TestMessage() {
                 Content = "Hello World - Send()",
-            }).Register(x => {
-                Console.WriteLine(x);
-            });
+            }).Register<TestMessage>(Console.WriteLine);
 
             bus.SendLocal(new TestMessage() {
                 Content = "Hello World - SendLocal()",
             });
-
-            var count = NServiceBus.Configure.Instance.Builder.Build<ITransport>().GetNumberOfPendingMessages();
 
             while (true)
                 Thread.Sleep(100);
@@ -54,12 +45,13 @@ namespace TestRunner {
         public string Content { get; set; }
     }
 
-    public class TestMessageHandler : IMessageHandler<TestMessage> {
+    public class TestMessageHandler : IMessageHandler<TestMessage>
+    {
 
         public IBus Bus { get; set; }
 
-        public void Handle(TestMessage message) {
-            //
+        public void Handle(TestMessage message)
+        {
             Bus.Return(42);
             throw new Exception("Testing Exception Management");
         }
