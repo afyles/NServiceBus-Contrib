@@ -32,22 +32,22 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common.Logging">
-      <HintPath>..\..\..\lib\quartz\Common.Logging.dll</HintPath>
+      <HintPath>..\..\..\..\lib\quartz\Common.Logging.dll</HintPath>
     </Reference>
     <Reference Include="log4net">
-      <HintPath>..\..\..\lib\log4net\log4net.dll</HintPath>
+      <HintPath>..\..\..\..\lib\log4net\log4net.dll</HintPath>
     </Reference>
     <Reference Include="NServiceBus">
-      <HintPath>..\..\..\lib\nservicebus\net4\NServiceBus.dll</HintPath>
+      <HintPath>..\..\..\..\lib\nservicebus\net4\NServiceBus.dll</HintPath>
     </Reference>
     <Reference Include="NServiceBus.Core">
-      <HintPath>..\..\..\lib\nservicebus\net4\NServiceBus.Core.dll</HintPath>
+      <HintPath>..\..\..\..\lib\nservicebus\net4\NServiceBus.Core.dll</HintPath>
     </Reference>
     <Reference Include="NServiceBus.Host">
-      <HintPath>..\..\..\lib\nservicebus\net4\NServiceBus.Host.exe</HintPath>
+      <HintPath>..\..\..\..\lib\nservicebus\net4\NServiceBus.Host.exe</HintPath>
     </Reference>
     <Reference Include="Quartz">
-      <HintPath>..\..\..\lib\quartz\Quartz.dll</HintPath>
+      <HintPath>..\..\..\..\lib\quartz\Quartz.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
