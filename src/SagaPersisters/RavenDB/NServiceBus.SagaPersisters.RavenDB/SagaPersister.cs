@@ -28,7 +28,7 @@ namespace NServiceBus
             var luceneQuery = string.Format("{0}:{1}", property, value);                        
 
             var resultArr = DocumentSessionFactory.Current
-                .Advanced.DynamicLuceneQuery<T>()
+                .Advanced.LuceneQuery<T>()
                 .Where(luceneQuery)
                 .ToArray();
 
