@@ -35,9 +35,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\lib\log4net\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b9a188c8922137c6, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\lib\ravendb\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\..\lib\ravendb\Client\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NServiceBus, Version=2.0.0.1219, Culture=neutral, PublicKeyToken=9fc386479f8a226c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -47,9 +46,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\lib\nservicebus\net4\NServiceBus.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Raven.Client.Lightweight, Version=1.0.0.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\lib\ravendb\Raven.Client.Lightweight.dll</HintPath>
+    <Reference Include="Raven.Abstractions">
+      <HintPath>..\..\..\..\lib\ravendb\Client\Raven.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Raven.Client.Lightweight">
+      <HintPath>..\..\..\..\lib\ravendb\Client\Raven.Client.Lightweight.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
