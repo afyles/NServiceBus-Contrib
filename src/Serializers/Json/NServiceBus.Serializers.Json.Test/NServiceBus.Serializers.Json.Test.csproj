@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -35,7 +35,7 @@
       <HintPath>..\..\..\..\lib\log4net\log4net.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\lib\ravendb\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\..\..\lib\ravendb\Client\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NServiceBus" Condition="$(TargetFrameworkVersion) == 'v4.0'">
       <HintPath>..\..\..\..\lib\nservicebus\net4\NServiceBus.dll</HintPath>
