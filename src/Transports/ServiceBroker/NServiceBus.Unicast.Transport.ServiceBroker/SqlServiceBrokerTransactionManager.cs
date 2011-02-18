@@ -21,6 +21,20 @@ namespace NServiceBus.Unicast.Transport.ServiceBroker {
                 connection.Open();
             }
 
+            //verify we still have a valid connection since we may not have opened it above, cleanup if we've lost our connection
+            if ((connection.State & System.Data.ConnectionState.Open) == 0)
+            {
+                if (transaction != null)
+                {
+                    transaction.Rollback();
+                    transaction.Dispose();
+                    transaction = null;
+                }
+                connection.Dispose();
+                connection = null;
+                throw new ApplicationException("Connection to database failed, cleaing up");
+            }
+
             bool disposeTransaction = transaction == null;
 
             if (transaction == null) {
