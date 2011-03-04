@@ -43,7 +43,7 @@ The NServiceBus Contrib uses a single root rakefile wich calls every rakefile it
 		msb.properties :configuration => COMPILE_TARGET, :platform => PLATFORM
 		msb.targets :Clean, :Build
 		msb.solution = File.dirname(__FILE__) + "/#{solution_file}" 
-		msb.command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
+		msb.path_to_command = File.join(ENV['windir'], 'Microsoft.NET', 'Framework', 'v4.0.30319', 'MSBuild.exe') 
 	end
 
 	task :build => [:clean, :compile] do  
