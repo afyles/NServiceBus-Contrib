@@ -10,6 +10,7 @@ namespace NServiceBus.SagaPersisters.RavenDB.Tests
 
         public RavenDbSagaPersisterTests()
         {
+<<<<<<< HEAD
             var documentStore = new Raven.Client.Client.EmbeddableDocumentStore { RunInMemory = true };
             documentStore.Initialize();
 
@@ -18,6 +19,12 @@ namespace NServiceBus.SagaPersisters.RavenDB.Tests
 
             //IDocumentSessionFactory documentSessionFactory = new DocumentSessionFactory(embeddableDocumentStore);
             IDocumentSessionFactory documentSessionFactory = new DocumentSessionFactory(documentStore);
+=======
+            var embeddableDocumentStore = new Raven.Client.Client.EmbeddableDocumentStore { RunInMemory = true };
+            embeddableDocumentStore.Initialize();
+
+            IDocumentSessionFactory documentSessionFactory = new DocumentSessionFactory(embeddableDocumentStore);
+>>>>>>> 263e042... Updated to raven build 206
 
             SagaPersister = new SagaPersister
             {

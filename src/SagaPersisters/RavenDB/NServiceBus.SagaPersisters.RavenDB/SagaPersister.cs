@@ -19,8 +19,14 @@ namespace NServiceBus
 
         public T Get<T>(Guid sagaId) where T : ISagaEntity
         {
-            return DocumentSessionFactory.Current
-                .Load<T>(sagaId.ToString());
+            try
+            {
+                return DocumentSessionFactory.Current.Load<T>(sagaId.ToString());
+            }
+            catch (InvalidCastException)
+            {
+                return default(T);
+            }            
         }
 
         public T Get<T>(string property, object value) where T : ISagaEntity
