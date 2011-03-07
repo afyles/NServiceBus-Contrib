@@ -24,6 +24,17 @@ namespace NServiceBus
         }
 
         public T Get<T>(string property, object value) where T : ISagaEntity
+<<<<<<< HEAD
+        {
+            var luceneQuery = string.Format("{0}:{1}", property, value);                        
+
+            var resultArr = DocumentSessionFactory.Current
+                .Advanced.LuceneQuery<T>()
+                .Where(luceneQuery)
+                .ToArray();
+
+            return resultArr.Length >= 1 ? resultArr[0] : default(T);
+=======
         {            
             //return DocumentSessionFactory.Current.Advanced.LuceneQuery<T>().WhereEquals(property, value).SingleOrDefault();
 
@@ -33,6 +44,7 @@ namespace NServiceBus
                 .Current
                 .Advanced
                 .LuceneQuery<T>().Where(luceneQuery).SingleOrDefault();            
+>>>>>>> 47757dd... UseOptimisticConcurrency is now true for sagas.
         }
 
         public void Complete(ISagaEntity saga)
