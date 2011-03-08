@@ -31,14 +31,7 @@ namespace NServiceBus
 
         public T Get<T>(string property, object value) where T : ISagaEntity
         {            
-            //return DocumentSessionFactory.Current.Advanced.LuceneQuery<T>().WhereEquals(property, value).SingleOrDefault();
-
-            string luceneQuery = string.Format("{0}:{1}", property, value);
-
-            return DocumentSessionFactory
-                .Current
-                .Advanced
-                .LuceneQuery<T>().Where(luceneQuery).SingleOrDefault();            
+            return DocumentSessionFactory.Current.Advanced.LuceneQuery<T>().WhereEquals(property, value).SingleOrDefault();           
         }
 
         public void Complete(ISagaEntity saga)
