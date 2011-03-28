@@ -1,5 +1,6 @@
 ﻿using System;
 using NServiceBus.Saga;
+using NServiceBus.SagaPersisters.RavenDB.Attributes;
 using NUnit.Framework;
 
 namespace NServiceBus.SagaPersisters.RavenDB.Tests
