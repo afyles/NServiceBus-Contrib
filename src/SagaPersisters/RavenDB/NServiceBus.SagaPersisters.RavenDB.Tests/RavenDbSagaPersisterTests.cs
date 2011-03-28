@@ -1,5 +1,6 @@
 ﻿using System;
 using NServiceBus.Saga;
+using NServiceBus.SagaPersisters.RavenDB.Attributes;
 using NUnit.Framework;
 
 namespace NServiceBus.SagaPersisters.RavenDB.Tests
@@ -55,5 +56,15 @@ namespace NServiceBus.SagaPersisters.RavenDB.Tests
         public string OriginalMessageId { get; set; }
 
         public string SomeIdentifier { get; set; }
+    }
+
+    public class SagaEntityWithUniqueProperty : IContainSagaData
+    {
+        public Guid Id { get; set; }
+        public string Originator { get; set; }
+        public string OriginalMessageId { get; set; }
+
+        [Unique]
+        public string ThisShouldBeUnique { get; set; }
     }
 }

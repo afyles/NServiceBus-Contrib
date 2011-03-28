@@ -64,6 +64,8 @@
     <Compile Include="RavenDBMessageModule.cs" />
     <Compile Include="SagaPersister.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UniqueAttribute.cs" />
+    <Compile Include="UniqueProperty.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
