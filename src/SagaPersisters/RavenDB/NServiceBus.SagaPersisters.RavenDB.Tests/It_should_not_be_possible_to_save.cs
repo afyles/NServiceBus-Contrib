@@ -36,4 +36,34 @@ namespace NServiceBus.SagaPersisters.RavenDB.Tests
             SagaPersister.Save(Saga2); // <- this should throw an NonUniqueObjectException
         }
     }
+
+    [TestFixture]
+    public class Do_we_need_versions : RavenDbSagaPersisterTests
+    {
+        private readonly Guid _sagaId = Guid.NewGuid();
+        private readonly string PROPERTY_DATA = "property data";
+
+        [SetUp]
+        public void SetUp()
+        {
+            SagaPersister.Save(new SagaEntityA { Id = _sagaId, SomeIdentifier = PROPERTY_DATA });
+            SagaPersister.DocumentSessionFactory.Current.SaveChanges();
+        }
+
+        [Test]
+        public void Read()
+        {
+            var saga1 = SagaPersister.Get<SagaEntityA>(_sagaId);
+            var saga2 = SagaPersister.Get<SagaEntityA>(_sagaId);
+
+            saga1.SomeIdentifier = "changed value!";
+            SagaPersister.Save(saga1);
+            SagaPersister.DocumentSessionFactory.Current.SaveChanges();
+
+            saga2.SomeIdentifier = "changed again!";
+            SagaPersister.Save(saga2);
+            SagaPersister.DocumentSessionFactory.Current.SaveChanges();
+
+        }
+    }
 }
