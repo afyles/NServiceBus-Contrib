@@ -57,11 +57,10 @@ namespace NServiceBus
         }
 
         private void StoreUniqueProperty(ISagaEntity saga)
-        {            
-            var session = DocumentSessionFactory.Current;
+        {                        
             var uniqueProperty = GetUniqueProperty(saga);            
             if (uniqueProperty != null)
-                session.Store(uniqueProperty);
+                DocumentSessionFactory.Current.Store(uniqueProperty);
         }
 
         private void DeleteUniquePropertyEntityIfExists(ISagaEntity saga)
