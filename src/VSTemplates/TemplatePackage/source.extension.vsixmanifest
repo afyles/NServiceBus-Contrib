@@ -3,7 +3,7 @@
   <Identifier Id="TemplatePackage.Microsoft.d5db0f3f-5853-4a39-be8c-1bbc17d78c39">
     <Name>NServiceBus Templates</Name>
     <Author>Adam Fyles</Author>
-    <Version>1.1</Version>
+    <Version>1.2</Version>
     <Description xml:space="preserve">NServiceBus Templates Package</Description>
     <Locale>1033</Locale>
     <License>license.txt</License>
