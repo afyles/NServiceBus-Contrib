@@ -23,80 +23,44 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing.Config
             Builder = config.Builder;
             Configurer = config.Configurer;
 
-            transportConfig = Configurer.ConfigureComponent<OracleAQSTransport>(ComponentCallModelEnum.Singleton);
+            receiverConfig = Configurer.ConfigureComponent<OracleAQSMessageReceiver>(DependencyLifecycle.SingleInstance);
+            senderConfig = Configurer.ConfigureComponent<OracleAQSMessageSender>(DependencyLifecycle.SingleInstance);
 
             var cfg = GetConfigSection<OracleAQSTransportConfig>();
 
             if (cfg != null)
             {
-                transportConfig.ConfigureProperty(t => t.InputQueue, cfg.InputQueue);
-                transportConfig.ConfigureProperty(t => t.NumberOfWorkerThreads, cfg.NumberOfWorkerThreads);
-                transportConfig.ConfigureProperty(t => t.ErrorQueue, cfg.ErrorQueue);
-                transportConfig.ConfigureProperty(t => t.MaxRetries, cfg.MaxRetries);
-                transportConfig.ConfigureProperty(t => t.QueueTable, cfg.QueueTable);
+                receiverConfig.ConfigureProperty(t => t.InputQueue, cfg.InputQueue);
+                receiverConfig.ConfigureProperty(t => t.QueueTable, cfg.QueueTable);
                 ConnectionString(cfg.ConnectionString);
             }
         }
 
-        private IComponentConfig<OracleAQSTransport> transportConfig;
+        private IComponentConfig<OracleAQSMessageReceiver> receiverConfig;
+        private IComponentConfig<OracleAQSMessageSender> senderConfig;
 
         public ConfigOracleAQSTransport QueueTable(String value)
         {
-            transportConfig.ConfigureProperty(t => t.QueueTable, value);
+            receiverConfig.ConfigureProperty(t => t.QueueTable, value);
             return this;
         }
 
         public ConfigOracleAQSTransport ConnectionString(string value)
         {
-            transportConfig.ConfigureProperty(t => t.ConnectionString, value);
+            receiverConfig.ConfigureProperty(t => t.ConnectionString, value);
+            senderConfig.ConfigureProperty(t => t.ConnectionString, value);
             return this;
         }
 
         public ConfigOracleAQSTransport InputQueue(string value)
         {
-            transportConfig.ConfigureProperty(t => t.InputQueue, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport NumberOfWorkerThreads(int value)
-        {
-            transportConfig.ConfigureProperty(t => t.NumberOfWorkerThreads, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport ErrorQueue(string value)
-        {
-            transportConfig.ConfigureProperty(t => t.ErrorQueue, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport MaxRetries(int value)
-        {
-            transportConfig.ConfigureProperty(t => t.MaxRetries, value);
+            receiverConfig.ConfigureProperty(t => t.InputQueue, value);
             return this;
         }
 
         public ConfigOracleAQSTransport SecondsToWaitForMessage(int value)
         {
-            transportConfig.ConfigureProperty(t => t.SecondsToWaitForMessage, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport UseDistributedTransaction(bool value)
-        {
-            transportConfig.ConfigureProperty(t => t.UseDistributedTransaction, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport IsolationLevel(IsolationLevel value)
-        {
-            transportConfig.ConfigureProperty(t => t.IsolationLevel, value);
-            return this;
-        }
-
-        public ConfigOracleAQSTransport TransactionTimeout(TimeSpan value)
-        {
-            transportConfig.ConfigureProperty(t => t.TransactionTimeout, value);
+            receiverConfig.ConfigureProperty(t => t.SecondsToWaitForMessage, value);
             return this;
         }
     }

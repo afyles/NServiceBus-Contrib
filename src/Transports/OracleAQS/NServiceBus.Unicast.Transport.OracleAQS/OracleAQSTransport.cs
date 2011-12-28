@@ -5,9 +5,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using log4net;
-using NServiceBus.Unicast.Transport.Msmq;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
+using NServiceBus.Unicast.Queuing;
 
 namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
 {
@@ -19,69 +19,61 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
     /// who created the Service Broker transport this is based off of
     /// </remarks>
     /// </summary>
-    public class OracleAQSTransport : TransportBase
+    public class OracleAQSMessageReceiver : IReceiveMessages
     {
         #region Members
-        [ThreadStatic]
-        private static OracleTransactionManager transactionManager;
-        private static readonly ILog Logger = LogManager.GetLogger(typeof(OracleAQSTransport));
-        private static String connectionString; 
+        private OracleTransactionManager transactionManager;
+        private static readonly ILog Logger = LogManager.GetLogger(typeof(OracleAQSMessageReceiver));
         #endregion
 
         #region Public Properties
         /// <summary>
         /// Connection String to the service hosting the service broker
         /// </summary>
-        public String ConnectionString
-        {
-            get { return connectionString; }
-            set { connectionString = value; }
-        }
+        public String ConnectionString { get; set; }
 
         /// <summary>
         /// Table that backs the queue
         /// </summary>
-        public String QueueTable { get; set; } 
+        public String QueueTable { get; set; }
+
+        /// <summary>
+        /// Name of the Oracle queue
+        /// </summary>
+        public String InputQueue { get; set; }
+
+        /// <summary>
+        /// How long we should wait for a message
+        /// </summary>
+        public int SecondsToWaitForMessage { get; set; }
         #endregion
 
         #region Overrides
-        public override int GetNumberOfPendingMessages()
+
+
+
+
+
+        #endregion
+
+        public bool HasMessage()
         {
-            int count = -1;
-
-            String sql = String.Format(@"SELECT COUNT(*) FROM {0}", this.QueueTable);
-
-            GetTransactionManager().RunInTransaction(
-                (c) =>
-                {
-                    var cmd = c.CreateCommand();
-                    cmd.CommandText = sql;
-                    count = (Int32)cmd.ExecuteScalar();
-                });
-
-            return count;
+            return this.GetNumberOfPendingMessages() > 0;
         }
 
-        public override void Send(TransportMessage m, String destination)
+        public void Init(string address, bool transactional)
         {
-            GetTransactionManager().RunInTransaction(c =>
-            {
-                // Set the time from the source machine when the message was sent
-                m.TimeSent = DateTime.UtcNow;
-                OracleAQQueue queue = new OracleAQQueue(destination, c, OracleAQMessageType.Xml);
-                queue.EnqueueOptions.Visibility = OracleAQVisibilityMode.OnCommit;
-
-                using (var stream = new MemoryStream())
-                {
-                    base.SerializeTransportMessage(m, stream);
-                    OracleAQMessage aqMessage = new OracleAQMessage(Encoding.UTF8.GetString(stream.ToArray()));
-                    aqMessage.Correlation  = m.CorrelationId;
-                    queue.Enqueue(aqMessage);
-                }
-            });
+            transactionManager = new OracleTransactionManager(ConnectionString);
         }
 
-        protected override void ReceiveFromQueue()
+        public TransportMessage Receive()
+        {
+            return this.ReceiveFromQueue();
+        }
+
+        #region Private Methods
+
+        private TransportMessage ReceiveFromQueue()
         {
             OracleAQDequeueOptions options = new OracleAQDequeueOptions
             {
@@ -93,136 +85,135 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
             OracleAQMessage aqMessage = null;
             TransportMessage transportMessage = null;
 
-            try
+            this.transactionManager.RunInTransaction(
+            (c) =>
             {
-                GetTransactionManager().RunInTransaction(
-                (c) =>
-                {
-                    OracleAQQueue queue = new OracleAQQueue(this.InputQueue, c, OracleAQMessageType.Xml);
-                    aqMessage = queue.Dequeue(options);
+                OracleAQQueue queue = new OracleAQQueue(this.InputQueue, c, OracleAQMessageType.Xml);
+                aqMessage = queue.Dequeue(options);
 
-                    // No message? That's okay
-                    if (null == aqMessage)
-                        return;
+                // No message? That's okay
+                if (null == aqMessage)
+                    return;
 
-                    Guid messageGuid = new Guid(aqMessage.MessageId);
-                    MessageId = messageGuid.ToString();
+                Guid messageGuid = new Guid(aqMessage.MessageId);
 
-                    if (base.HandledMaxRetries(messageGuid.ToString()))
-                    {
-                        Logger.Error(string.Format("Message has failed the maximum number of times allowed, ID={0}.", MessageId));
-                        this.MoveToErrorQueue(aqMessage);
-                        base.OnFinishedMessageProcessing();
+                // the serialization has to go here since Oracle needs an open connection to 
+                // grab the payload from the message
+                transportMessage = this.ExtractTransportMessage(aqMessage.Payload);
+            });
 
-                        return;
-                    }
-
-                    base.OnStartedMessageProcessing();
-
-                    // the serialization has to go here since Oracle needs an open connection to 
-                    // grab the payload from the message
-                    try
-                    {
-                        if (base.UseXmlTransportSeralization)
-                            transportMessage = this.ExtractXmlTransportMessage(aqMessage.Payload);
-                        else
-                            transportMessage = this.ExtractBinaryTransportMessage(aqMessage.Payload);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error("Could not extract message data.", e);
-                        this.MoveToErrorQueue(aqMessage);
-                        base.OnFinishedMessageProcessing(); // don't care about failures here
-                        return; // deserialization failed - no reason to try again, so don't throw
-                    }
-
-                });
-            }
-            catch (Exception e)
-            {
-                Logger.Error("Error in receiving message from queue.", e);
-                throw;
-            }
+            Logger.DebugFormat("Received message from queue {0}", this.QueueTable);
 
             // Set the correlation Id
             if (String.IsNullOrEmpty(transportMessage.IdForCorrelation))
                 transportMessage.IdForCorrelation = transportMessage.Id;
 
-            // care about failures here
-            var exceptionNotThrown = OnTransportMessageReceived(transportMessage);
-            // and here
-            var otherExNotThrown = OnFinishedMessageProcessing();
-
-            // but need to abort takes precedence - failures aren't counted here,
-            // so messages aren't moved to the error queue.
-            if (NeedToAbort)
-                throw new AbortHandlingCurrentMessageException();
-
-            if (!(exceptionNotThrown && otherExNotThrown)) //cause rollback
-                throw new ApplicationException("Exception occured while processing message.");
-        } 
-        #endregion
-
-        #region Private Methods
-
-        private OracleTransactionManager GetTransactionManager()
-        {
-            if (null == transactionManager)
-                transactionManager = new OracleTransactionManager(ConnectionString);
-
-            return transactionManager;
+            return transportMessage;
         }
 
-        private void MoveToErrorQueue(OracleAQMessage message)
+        private int GetNumberOfPendingMessages()
         {
-            if (!String.IsNullOrEmpty(base.ErrorQueue))
-            {
-                GetTransactionManager().RunInTransaction(c =>
+            int count = -1;
+
+            String sql = String.Format(@"SELECT COUNT(*) FROM {0}", this.QueueTable);
+
+            this.transactionManager.RunInTransaction(
+                (c) =>
                 {
-                    OracleAQQueue queue = new OracleAQQueue(base.ErrorQueue, c, OracleAQMessageType.Xml);
-                    queue.EnqueueOptions.Visibility = OracleAQVisibilityMode.OnCommit;
-                    queue.Enqueue(message);
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = sql;
+                    count = (Int32)cmd.ExecuteScalar();
                 });
-            }
+
+            Logger.DebugFormat("There are {0} messages in queue {0}", count, this.QueueTable);
+
+            return count;
         }
 
-        private TransportMessage ExtractBinaryTransportMessage(Object payload)
+        private TransportMessage ExtractTransportMessage(Object payload)
         {
             OracleXmlType type = payload as OracleXmlType;
-
-            return new BinaryFormatter().Deserialize(type.GetStream()) as TransportMessage;
-        }
-
-        private TransportMessage ExtractXmlTransportMessage(Object payload)
-        {
-            OracleXmlType type = payload as OracleXmlType;
+            TransportMessage message = null;
 
             var xs = new XmlSerializer(typeof(TransportMessage));
-            
-            var transportMessage = xs.Deserialize(type.GetXmlReader()) as TransportMessage;
+
+            message = xs.Deserialize(type.GetXmlReader()) as TransportMessage;
 
             var bodyDoc = type.GetXmlDocument();
 
             var bodySection = bodyDoc.DocumentElement.SelectSingleNode("Body").FirstChild as XmlCDataSection;
 
-            transportMessage.Body = this.ExtractMessages(bodySection);
+            message.Body = Encoding.UTF8.GetBytes(bodySection.Data);
 
-            return transportMessage;
-        }
-
-        private IMessage[] ExtractMessages(XmlCDataSection data)
-        {
-            var messages = new XmlDocument();
-            messages.LoadXml(data.Data);
-
-            using (var stream = new MemoryStream())
-            {
-                messages.Save(stream);
-                stream.Position = 0;
-                return base.MessageSerializer.Deserialize(stream);
-            }
+            return message;
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Sends a message via Oracle AQS
+    /// </summary>
+    public class OracleAQSMessageSender : ISendMessages
+    {
+        #region Members
+        private static readonly ILog Logger = LogManager.GetLogger(typeof(OracleAQSMessageReceiver));
+        #endregion
+
+        /// <summary>
+        /// Connection String to the service hosting the service broker
+        /// </summary>
+        public String ConnectionString { get; set; }
+
+        public void Send(TransportMessage message, string destination)
+        {
+            var transactionManager = new OracleTransactionManager(this.ConnectionString);
+
+            transactionManager.RunInTransaction(c =>
+            {
+                // Set the time from the source machine when the message was sent
+                message.TimeSent = DateTime.UtcNow;
+                OracleAQQueue queue = new OracleAQQueue(destination, c, OracleAQMessageType.Xml);
+                queue.EnqueueOptions.Visibility = OracleAQVisibilityMode.OnCommit;
+
+                using (var stream = new MemoryStream())
+                {
+                    this.SerializeToXml(message, stream);
+                    OracleAQMessage aqMessage = new OracleAQMessage(Encoding.UTF8.GetString(stream.ToArray()));
+                    aqMessage.Correlation = message.CorrelationId;
+                    queue.Enqueue(aqMessage);
+                }
+            });
+        }
+
+        private void SerializeToXml(TransportMessage transportMessage, MemoryStream stream)
+        {
+            var overrides = new XmlAttributeOverrides();
+            var attrs = new XmlAttributes { XmlIgnore = true };
+
+            overrides.Add(typeof(TransportMessage), "Messages", attrs);
+            var xs = new XmlSerializer(typeof(TransportMessage), overrides);
+
+            var doc = new XmlDocument();
+
+            using (var tempstream = new MemoryStream())
+            {
+                xs.Serialize(tempstream, transportMessage);
+                tempstream.Position = 0;
+
+                doc.Load(tempstream);
+            }
+
+            var data = Encoding.UTF8.GetString(transportMessage.Body);
+
+            var bodyElement = doc.CreateElement("Body");
+            bodyElement.AppendChild(doc.CreateCDataSection(data));
+            doc.DocumentElement.AppendChild(bodyElement);
+
+            doc.Save(stream);
+            stream.Position = 0;
+
+        }
+
     }
 }
