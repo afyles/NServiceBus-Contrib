@@ -27,6 +27,7 @@ namespace NServiceBus
                 throw new InvalidOperationException("Current session already exists.");
 
             _session = _documentStore.OpenSession();
+            _session.Advanced.UseOptimisticConcurrency = true;
 
             return _session;
         }
