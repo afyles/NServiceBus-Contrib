@@ -19,25 +19,20 @@ namespace NServiceBus
 
         public T Get<T>(Guid sagaId) where T : ISagaEntity
         {
-            try
-            {
-                return DocumentSessionFactory.Current.Load<T>(sagaId.ToString());
-            }
-            catch (InvalidCastException)
-            {
-                return default(T);
-            }            
+            return DocumentSessionFactory.Current
+                .Load<T>(sagaId.ToString());
         }
 
         public T Get<T>(string property, object value) where T : ISagaEntity
         {
-            var luceneQuery = string.Format("{0}:{1}", property, value);
+            var luceneQuery = string.Format("{0}:{1}", property, value);                        
 
-            return DocumentSessionFactory.Current
-                        .Advanced
-                        .LuceneQuery<T>()
-                        .Where(luceneQuery)
-                        .SingleOrDefault();
+            var resultArr = DocumentSessionFactory.Current
+                .Advanced.LuceneQuery<T>()
+                .Where(luceneQuery)
+                .ToArray();
+
+            return resultArr.Length >= 1 ? resultArr[0] : default(T);
         }
 
         public void Complete(ISagaEntity saga)
