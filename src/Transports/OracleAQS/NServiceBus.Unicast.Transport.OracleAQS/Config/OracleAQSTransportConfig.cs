@@ -44,55 +44,6 @@ namespace NServiceBus.Config
             }
         }
 
-        /// <summary>
-        /// The service to which to forward messages that could not be processed
-        /// </summary>
-        [ConfigurationProperty("ErrorQueue", IsRequired = true)]
-        public String ErrorQueue
-        {
-            get
-            {
-                return this["ErrorQueue"] as String;
-            }
-            set
-            {
-                this["ErrorQueue"] = value;
-            }
-        }
-
-        /// <summary>
-        /// The number of worker threads that can process messages in parallel.
-        /// </summary>
-        [ConfigurationProperty("NumberOfWorkerThreads", IsRequired = true)]
-        public int NumberOfWorkerThreads
-        {
-            get
-            {
-                return (int)this["NumberOfWorkerThreads"];
-            }
-            set
-            {
-                this["NumberOfWorkerThreads"] = value;
-            }
-        }
-
-        /// <summary>
-        /// The maximum number of times to retry processing a message
-        /// when it fails before moving it to the error queue.
-        /// </summary>
-        [ConfigurationProperty("MaxRetries", IsRequired = true)]
-        public int MaxRetries
-        {
-            get
-            {
-                return (int)this["MaxRetries"];
-            }
-            set
-            {
-                this["MaxRetries"] = value;
-            }
-        }
-
         [ConfigurationProperty("ConnectionString", IsRequired = true)]
         public String ConnectionString
         {

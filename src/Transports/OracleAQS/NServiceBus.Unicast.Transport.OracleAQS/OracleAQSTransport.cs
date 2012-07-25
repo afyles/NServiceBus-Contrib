@@ -48,28 +48,24 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
         public int SecondsToWaitForMessage { get; set; }
         #endregion
 
-        #region Overrides
-
-
-
-
-
-        #endregion
-
+        #region IReceiveMessages Members
+        
         public bool HasMessage()
         {
             return this.GetNumberOfPendingMessages() > 0;
-        }
-
-        public void Init(string address, bool transactional)
-        {
-            transactionManager = new OracleTransactionManager(ConnectionString);
         }
 
         public TransportMessage Receive()
         {
             return this.ReceiveFromQueue();
         }
+
+        public void Init(Address address, bool transactional)
+        {
+            transactionManager = new OracleTransactionManager(ConnectionString);
+        } 
+
+        #endregion
 
         #region Private Methods
 
@@ -165,15 +161,14 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
         /// </summary>
         public String ConnectionString { get; set; }
 
-        public void Send(TransportMessage message, string destination)
+        public void Send(TransportMessage message, Address address)
         {
             var transactionManager = new OracleTransactionManager(this.ConnectionString);
 
             transactionManager.RunInTransaction(c =>
             {
                 // Set the time from the source machine when the message was sent
-                message.TimeSent = DateTime.UtcNow;
-                OracleAQQueue queue = new OracleAQQueue(destination, c, OracleAQMessageType.Xml);
+                OracleAQQueue queue = new OracleAQQueue(address.Queue, c, OracleAQMessageType.Xml);
                 queue.EnqueueOptions.Visibility = OracleAQVisibilityMode.OnCommit;
 
                 using (var stream = new MemoryStream())
@@ -214,6 +209,5 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
             stream.Position = 0;
 
         }
-
     }
 }

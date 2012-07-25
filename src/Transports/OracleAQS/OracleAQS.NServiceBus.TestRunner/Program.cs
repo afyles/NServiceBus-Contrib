@@ -20,9 +20,6 @@ namespace ConsoleTest
                     .InputQueue("TEST_Q")
                     .QueueTable("TEST_Q_TAB")
                     .ConnectionString("Data Source=localhost/xe;User Id=hr;Password=hr")
-                    //.ErrorQueue("TEST_Q")
-                    .MaxRetries(2)
-                    .NumberOfWorkerThreads(1)
                 .CreateBus()
                 .Start();
 
