@@ -2,6 +2,7 @@
 using NServiceBus;
 using System.Threading;
 using System.Xml.Serialization;
+using NServiceBus.Faults;
 
 namespace ConsoleTest
 {
@@ -13,20 +14,22 @@ namespace ConsoleTest
                 NServiceBus.Configure.With()
                 .DefaultBuilder()
                 .XmlSerializer()
+                .Log4Net()
+                .IsTransactional(false)// we'll handle this ourselves since we get locking errors from TransactionTransport
+                .DisableSecondLevelRetries()
+                .DisableRavenInstall()
                 .UnicastBus()
-                    .DoNotAutoSubscribe()
-                    .LoadMessageHandlers()
+                   .DoNotAutoSubscribe()
                 .OracleAQSTransport()
                     .InputQueue("TEST_Q")
                     .QueueTable("TEST_Q_TAB")
-                    .ConnectionString("Data Source=localhost/xe;User Id=hr;Password=hr")
+                    .ConnectionString("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=DB-AA-03.test.wfm.local)(PORT=1521)));User Id=hr;Password=hr")
                 .CreateBus()
                 .Start();
 
+            bus.Send("TEST_Q",new MockMessage { Data = "Hello World" });
 
-            //bus.Send("TEST_Q",new MockMessage { Data = "Hello World" });
-
-            Thread.Sleep(TimeSpan.FromMinutes(2));
+            Console.ReadKey();
         }
     }
 

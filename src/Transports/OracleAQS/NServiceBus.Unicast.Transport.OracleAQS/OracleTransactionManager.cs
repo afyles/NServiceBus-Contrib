@@ -1,6 +1,7 @@
 ﻿using System;
 using Oracle.DataAccess.Client;
 using System.Data;
+using System.Transactions;
 
 namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
 {
@@ -11,7 +12,8 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
     public class OracleTransactionManager
     {
         private readonly String connectionString;
-
+        private OracleConnection connection;
+        private OracleTransaction transaction;
 
         public OracleTransactionManager(String connectionString)
         {
@@ -23,42 +25,50 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
 
         public void RunInTransaction(Action<OracleConnection> callback)
         {
-            OracleConnection connection = null;
-            OracleTransaction transaction = null;
+            Boolean closeConnection = connection == null;
 
-            if (null == connection )
+            if (null == connection)
             {
-                connection = new OracleConnection(connectionString);
-                connection.Open();
+                this.connection = new OracleConnection(connectionString);
+                this.connection.Open();
             }
 
-            if (null == transaction)
-                transaction = connection.BeginTransaction();
+            Boolean inDistributedTransaction = null != Transaction.Current;
+
+            if (null == this.transaction && !inDistributedTransaction)
+                this.transaction = connection.BeginTransaction();
 
             try
             {
                 if (connection.State == ConnectionState.Closed)
-                    connection.Open();
+                    this.connection.Open();
 
                 callback(connection);
 
-                if (null != transaction)
-                    transaction.Commit();
+                if (null != this.transaction && !inDistributedTransaction)
+                    this.transaction.Commit();
             }
             catch (Exception)
             {
-                if (null != connection && connection.State == ConnectionState.Open && null != transaction)
-                    transaction.Rollback();
+                if (null != this.transaction)
+                    this.transaction.Rollback();
 
                 throw;
             }
             finally
             {
-                if (null != transaction)
-                    transaction.Dispose();
+                if (null != this.transaction)
+                {
+                    this.transaction.Dispose();
+                    this.transaction = null;
+                }
 
-                if (null != connection)
-                    connection.Close();
+                if (null != this.connection)
+                {
+                    this.connection.Close();
+                    this.connection.Dispose();
+                    this.connection = null;
+                }
             }
         }
     }

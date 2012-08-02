@@ -8,6 +8,8 @@ using log4net;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 using NServiceBus.Unicast.Queuing;
+using System.Collections.Generic;
+using NServiceBus.Serialization;
 
 namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
 {
@@ -23,6 +25,7 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
     {
         #region Members
         private OracleTransactionManager transactionManager;
+        private Address address;
         private static readonly ILog Logger = LogManager.GetLogger(typeof(OracleAQSMessageReceiver));
         #endregion
 
@@ -63,6 +66,7 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
         public void Init(Address address, bool transactional)
         {
             transactionManager = new OracleTransactionManager(ConnectionString);
+            this.address = address;
         } 
 
         #endregion
@@ -109,7 +113,7 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
 
         private int GetNumberOfPendingMessages()
         {
-            int count = -1;
+            Object count = null;
 
             String sql = String.Format(@"SELECT COUNT(*) FROM {0}", this.QueueTable);
 
@@ -118,12 +122,15 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
                 {
                     var cmd = c.CreateCommand();
                     cmd.CommandText = sql;
-                    count = (Int32)cmd.ExecuteScalar();
+                    count = cmd.ExecuteScalar();
                 });
 
-            Logger.DebugFormat("There are {0} messages in queue {0}", count, this.QueueTable);
+            Int32 msgCount = 0;
 
-            return count;
+            if ( Int32.TryParse(count.ToString(),out msgCount ))
+                Logger.DebugFormat("There are {0} messages in queue {0}", count, this.QueueTable);
+
+            return msgCount;
         }
 
         private TransportMessage ExtractTransportMessage(Object payload)
@@ -131,9 +138,12 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
             OracleXmlType type = payload as OracleXmlType;
             TransportMessage message = null;
 
-            var xs = new XmlSerializer(typeof(TransportMessage));
-
-            message = xs.Deserialize(type.GetXmlReader()) as TransportMessage;
+            message = new TransportMessage 
+            { 
+                ReplyToAddress = this.address, 
+                MessageIntent = MessageIntentEnum.Send, 
+                Headers = new Dictionary<String,String>()
+            };
 
             var bodyDoc = type.GetXmlDocument();
 
@@ -152,7 +162,7 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
     /// </summary>
     public class OracleAQSMessageSender : ISendMessages
     {
-        #region Members
+        #region Private Members
         private static readonly ILog Logger = LogManager.GetLogger(typeof(OracleAQSMessageReceiver));
         #endregion
 
@@ -170,7 +180,6 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
                 // Set the time from the source machine when the message was sent
                 OracleAQQueue queue = new OracleAQQueue(address.Queue, c, OracleAQMessageType.Xml);
                 queue.EnqueueOptions.Visibility = OracleAQVisibilityMode.OnCommit;
-
                 using (var stream = new MemoryStream())
                 {
                     this.SerializeToXml(message, stream);
@@ -186,8 +195,13 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
             var overrides = new XmlAttributeOverrides();
             var attrs = new XmlAttributes { XmlIgnore = true };
 
-            overrides.Add(typeof(TransportMessage), "Messages", attrs);
-            var xs = new XmlSerializer(typeof(TransportMessage), overrides);
+            Type msgType = typeof(TransportMessage);
+
+            overrides.Add(msgType, "Messages", attrs);
+            overrides.Add(msgType, "ReplyToAddress", attrs);
+            overrides.Add(msgType, "Headers", attrs);
+
+            var xs = new XmlSerializer(msgType, overrides);
 
             var doc = new XmlDocument();
 
@@ -200,6 +214,8 @@ namespace NServiceBus.Unicast.Transport.OracleAdvancedQueuing
             }
 
             var data = Encoding.UTF8.GetString(transportMessage.Body);
+
+
 
             var bodyElement = doc.CreateElement("Body");
             bodyElement.AppendChild(doc.CreateCDataSection(data));
